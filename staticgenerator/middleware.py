@@ -18,7 +18,10 @@ class StaticGeneratorMiddleware(object):
     gen = StaticGenerator()
     
     def process_response(self, request, response):
-        if getattr(settings, 'STATIC_GENERATOR_ANON_ONLY', True) == True and request.user.is_authenticated():
+        # Sometimes there isn't a user, like when being redirected to login to the admin page.
+        # Let's not write in that situation.
+        if getattr(settings, 'STATIC_GENERATOR_ANON_ONLY', True) == True and \
+               (not(getattr(request, 'user', False)) or request.user.is_authenticated()):
             return response
         if response.status_code == 200:
             for url in self.urls:
